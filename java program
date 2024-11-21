@@ -1,0 +1,105 @@
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.Scanner;
+
+public class PersonalInfoSystem {
+
+    public static void main(String[] args) {
+        // Database URL, username, and password
+        String jdbcURL = "jdbc:mysql://127.0.0.1:3306/personal_info_db"; // Update with your database URL
+        String dbUsername = "root"; // Update with your MySQL username
+        String dbPassword = "rec#1234"; // Update with your MySQL password
+
+        Scanner scanner = new Scanner(System.in);
+
+        try {
+            // Load the MySQL JDBC Driver
+            Class.forName("com.mysql.cj.jdbc.Driver");
+
+            // Connect to the database
+            Connection connection = DriverManager.getConnection(jdbcURL, dbUsername, dbPassword);
+            System.out.println("Connected to the database!");
+
+            boolean exit = false;
+            while (!exit) {
+                System.out.println("\nChoose an option:");
+                System.out.println("1. Add new user");
+                System.out.println("2. View all users");
+                System.out.println("3. Exit");
+
+                int choice = scanner.nextInt();
+                scanner.nextLine(); // Consume the newline
+
+                switch (choice) {
+                    case 1: // Add new user
+                        System.out.print("Enter first name: ");
+                        String firstName = scanner.nextLine();
+
+                        System.out.print("Enter last name: ");
+                        String lastName = scanner.nextLine();
+
+                        System.out.print("Enter age: ");
+                        int age = scanner.nextInt();
+                        scanner.nextLine(); // Consume the newline
+
+                        System.out.print("Enter email: ");
+                        String email = scanner.nextLine();
+
+                        System.out.print("Enter phone number: ");
+                        String phone = scanner.nextLine();
+
+                        String insertQuery = "INSERT INTO users (first_name, last_name, age, email, phone) VALUES (?, ?, ?, ?, ?)";
+                        PreparedStatement preparedStatement = connection.prepareStatement(insertQuery);
+                        preparedStatement.setString(1, firstName);
+                        preparedStatement.setString(2, lastName);
+                        preparedStatement.setInt(3, age);
+                        preparedStatement.setString(4, email);
+                        preparedStatement.setString(5, phone);
+
+                        int rowsInserted = preparedStatement.executeUpdate();
+                        if (rowsInserted > 0) {
+                            System.out.println("User added successfully!");
+                        }
+                        break;
+
+                    case 2: // View all users
+                        Statement statement = connection.createStatement();
+                        String selectQuery = "SELECT * FROM users";
+                        ResultSet resultSet = statement.executeQuery(selectQuery);
+
+                        System.out.println("\nUser Details:");
+                        while (resultSet.next()) {
+                            int id = resultSet.getInt("id");
+                            String fName = resultSet.getString("first_name");
+                            String lName = resultSet.getString("last_name");
+                            int userAge = resultSet.getInt("age");
+                            String userEmail = resultSet.getString("email");
+                            String userPhone = resultSet.getString("phone");
+
+                            System.out.printf("ID: %d, Name: %s %s, Age: %d, Email: %s, Phone: %s%n",
+                                              id, fName, lName, userAge, userEmail, userPhone);
+                        }
+                        break;
+
+                    case 3: // Exit
+                        exit = true;
+                        break;
+
+                    default:
+                        System.out.println("Invalid option. Please try again.");
+                }
+            }
+
+            // Close the connection
+            connection.close();
+            System.out.println("Connection closed!");
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            scanner.close();
+        }
+    }
+}
